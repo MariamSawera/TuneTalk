@@ -1,15 +1,16 @@
-import './App.css'
-//import components
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Chat from "./pages/Chat";
+import Home from "./pages/Home"; 
+import Navbar from "./components/Navbar";
 
-
-function App() {
-
+export default function App() {
   return (
-    <>
-      <Navbar/>
-      <Footer/>
-    </>
-  )
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/chat" element={<Chat />} />
+      </Routes>
+    </Router>
+  );
 }
-
-export default App
