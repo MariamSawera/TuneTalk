@@ -1,17 +1,24 @@
+
+// src/pages/Chat.jsx
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import './Chat.css';
 
 const socket = io('http://localhost:3001');
 
 export default function Chat() {
+  const [username, setUsername] = useState('');
   const [message, setMessage] = useState('');
   const [chat, setChat] = useState([]);
+  const [isPrivate, setIsPrivate] = useState(false);
 
   const sendMessage = () => {
-    if (message.trim()) {
+    if (message.trim() && username.trim()) {
       socket.emit('send_message', {
         message,
+        username,
         time: new Date().toLocaleTimeString(),
+        type: isPrivate ? 'private' : 'public',
       });
       setMessage('');
     }
@@ -22,35 +29,69 @@ export default function Chat() {
       setChat((prev) => [...prev, data]);
     });
 
-    return () => {
-      socket.off('receive_message');
-    };
+    return () => socket.off('receive_message');
   }, []);
 
-  return (
-    <div className="p-4 w-full max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Real-Time Chat</h2>
+  if (!username) {
+    return (
+      <div className="chat-container">
+        <h2>Enter your name to join chat</h2>
+        <input
+          type="text"
+          placeholder="Your name"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') setUsername(e.target.value);
+          }}
+          className="chat-input"
+        />
+      </div>
+    );
+  }
 
-      <div className="h-64 overflow-y-auto border p-2 mb-2 bg-white text-black rounded">
-        {chat.map((msg, idx) => (
-          <div key={idx} className="mb-1">
-            <span className="text-sm text-gray-600">{msg.time}:</span> {msg.message}
-          </div>
-        ))}
+  return (
+    <div className="chat-container">
+      <h2>Welcome, {username} 👋</h2>
+
+      <div className="chat-toggle">
+        <button
+          className={!isPrivate ? 'active-tab' : ''}
+          onClick={() => setIsPrivate(false)}
+        >
+          Public Chat
+        </button>
+        <button
+          className={isPrivate ? 'active-tab' : ''}
+          onClick={() => setIsPrivate(true)}
+        >
+          Private Chat
+        </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="chat-box">
+        {chat
+          .filter((msg) => (isPrivate ? msg.type === 'private' : msg.type === 'public'))
+          .map((msg, idx) => (
+            <div key={idx} className="chat-message">
+              <span className="chat-time">{msg.time}</span>
+              <strong>{msg.username}:</strong> {msg.message}
+            </div>
+          ))}
+      </div>
+
+      <div className="chat-form">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="border p-2 flex-1 rounded text-black"
-          placeholder="Type your message..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') sendMessage();
+          }}
+          className="chat-input"
+          placeholder={`Type a ${isPrivate ? 'private' : 'public'} message...`}
         />
-        <button onClick={sendMessage} className="bg-cyan-500 text-white px-4 py-2 rounded">
-          Send
-        </button>
+        <button onClick={sendMessage} className="chat-send-btn">Send</button>
       </div>
     </div>
   );
 }
+

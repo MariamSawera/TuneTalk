@@ -1,6 +1,10 @@
-// Home.jsx
-function Home() {
-  return <div>Home Page</div>;
-}
+import './Home.css';
 
-export default Home;
+export default function Home() {
+  return (
+    <div className="main-box">
+      <h2>Welcome to Musix </h2>
+      <p>Listen to Music with Chat-app Feature.</p>
+    </div>
+  );
+}
